@@ -1,0 +1,439 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated user account, subscription tier, role, and credit wallet summary.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "description": "Verified account email" },
+        "displayName": { "type": "string", "description": "Display name" },
+        "photoUrl": { "type": "string", "description": "Optional avatar URL" },
+        "role": { "type": "string", "enum": ["USER", "ADMIN"] },
+        "status": { "type": "string", "enum": ["ACTIVE", "SUSPENDED"] },
+        "planId": { "type": "string", "enum": ["FREE", "PRO", "STUDIO", "BUSINESS"] },
+        "creditBalance": { "type": "integer", "description": "Available AI credits" },
+        "totalCreditsUsed": { "type": "integer", "description": "Lifetime AI credits spent" },
+        "preferredModel": { "type": "string", "description": "Default Gemini model ID" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "email", "displayName", "role", "status", "planId", "creditBalance", "totalCreditsUsed", "preferredModel", "createdAt", "updatedAt"]
+    },
+    "DeveloperAccount": {
+      "title": "DeveloperAccount",
+      "description": "Developer API platform registration and rate-limit quota record.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "organizationName": { "type": "string" },
+        "developerPlanId": { "type": "string", "enum": ["FREE_DEVELOPER", "PRO_DEVELOPER", "BUSINESS_DEVELOPER", "ENTERPRISE"] },
+        "status": { "type": "string", "enum": ["ACTIVE", "SUSPENDED"] },
+        "rateLimitRpm": { "type": "integer" },
+        "monthlyApiQuota": { "type": "integer" },
+        "apiCreditsBalance": { "type": "integer" },
+        "totalApiRequests": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "email", "organizationName", "developerPlanId", "status", "rateLimitRpm", "monthlyApiQuota", "apiCreditsBalance", "totalApiRequests", "createdAt", "updatedAt"]
+    },
+    "SubscriptionRecord": {
+      "title": "SubscriptionRecord",
+      "description": "Razorpay-backed user or developer subscription lifecycle state.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "planId": { "type": "string" },
+        "planCategory": { "type": "string", "enum": ["CONSUMER", "DEVELOPER"] },
+        "billingInterval": { "type": "string", "enum": ["MONTHLY", "ANNUAL"] },
+        "status": { "type": "string", "enum": ["CREATED", "AUTHENTICATED", "ACTIVE", "PENDING", "HALTED", "CANCELLED", "EXPIRED", "FAILED"] },
+        "razorpaySubscriptionId": { "type": "string" },
+        "razorpayPlanId": { "type": "string" },
+        "amountInr": { "type": "integer" },
+        "nextBillingAt": { "type": "string", "format": "date-time" },
+        "cancelAtPeriodEnd": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "planId", "planCategory", "billingInterval", "status", "amountInr", "cancelAtPeriodEnd", "createdAt", "updatedAt"]
+    },
+    "SubscriptionPlan": {
+      "title": "SubscriptionPlan",
+      "description": "Configurable Consumer or Developer SaaS subscription tier.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "planCategory": { "type": "string", "enum": ["CONSUMER", "DEVELOPER"] },
+        "monthlyPriceInr": { "type": "integer" },
+        "annualPriceInr": { "type": "integer" },
+        "monthlyCredits": { "type": "integer" },
+        "rateLimitRpm": { "type": "integer" },
+        "razorpayMonthlyPlanId": { "type": "string" },
+        "razorpayAnnualPlanId": { "type": "string" },
+        "badge": { "type": "string" },
+        "features": { "type": "array" },
+        "sortOrder": { "type": "integer" },
+        "active": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "monthlyPriceInr", "annualPriceInr", "monthlyCredits", "badge", "features", "sortOrder", "active", "updatedAt"]
+    },
+    "PaymentRecord": {
+      "title": "PaymentRecord",
+      "description": "Backend-verified Razorpay payment and receipt record.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "subscriptionId": { "type": "string" },
+        "planId": { "type": "string" },
+        "amountPaise": { "type": "integer" },
+        "currency": { "type": "string" },
+        "status": { "type": "string", "enum": ["CREATED", "AUTHORIZED", "CAPTURED", "FAILED", "REFUNDED"] },
+        "razorpayOrderId": { "type": "string" },
+        "razorpayPaymentId": { "type": "string" },
+        "razorpaySubscriptionId": { "type": "string" },
+        "method": { "type": "string" },
+        "receiptNumber": { "type": "string" },
+        "refundId": { "type": "string" },
+        "refundAmountPaise": { "type": "integer" },
+        "failureReason": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "planId", "amountPaise", "currency", "status", "receiptNumber", "createdAt", "updatedAt"]
+    },
+    "PaymentEvent": {
+      "title": "PaymentEvent",
+      "description": "Idempotent Razorpay webhook event processing log (backend/admin only).",
+      "type": "object",
+      "properties": {
+        "eventId": { "type": "string" },
+        "eventType": { "type": "string" },
+        "signatureVerified": { "type": "boolean" },
+        "payloadHash": { "type": "string" },
+        "status": { "type": "string" },
+        "processedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["eventId", "eventType", "signatureVerified", "payloadHash", "status", "processedAt"]
+    },
+    "ApiKeyRecord": {
+      "title": "ApiKeyRecord",
+      "description": "Hashed CEREVIX API key metadata (plaintext key is never stored).",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "developerId": { "type": "string" },
+        "name": { "type": "string" },
+        "keyPrefix": { "type": "string" },
+        "keyHash": { "type": "string" },
+        "scopes": { "type": "array" },
+        "rateLimitRpm": { "type": "integer" },
+        "status": { "type": "string", "enum": ["ACTIVE", "REVOKED"] },
+        "requestCount": { "type": "integer" },
+        "lastUsedAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "revokedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "developerId", "name", "keyPrefix", "keyHash", "rateLimitRpm", "status", "requestCount", "createdAt"]
+    },
+    "ApiRequestLog": {
+      "title": "ApiRequestLog",
+      "description": "External CEREVIX API call log and latency/credit metrics.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "keyId": { "type": "string" },
+        "endpoint": { "type": "string" },
+        "method": { "type": "string" },
+        "modelId": { "type": "string" },
+        "providerId": { "type": "string" },
+        "statusCode": { "type": "integer" },
+        "latencyMs": { "type": "integer" },
+        "creditsCharged": { "type": "integer" },
+        "tokensUsed": { "type": "integer" },
+        "errorMessage": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "keyId", "endpoint", "method", "statusCode", "latencyMs", "creditsCharged", "createdAt"]
+    },
+    "CreditWallet": {
+      "title": "CreditWallet",
+      "description": "Dedicated concurrency-safe credit wallet synced with user entitlements.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "balance": { "type": "integer" },
+        "subscriptionCredits": { "type": "integer" },
+        "purchasedCredits": { "type": "integer" },
+        "lifetimeUsed": { "type": "integer" },
+        "lifetimeRefunded": { "type": "integer" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "balance", "subscriptionCredits", "purchasedCredits", "lifetimeUsed", "lifetimeRefunded", "updatedAt"]
+    },
+    "CreditTransaction": {
+      "title": "CreditTransaction",
+      "description": "Immutable ledger entry for credit grants, top-ups, refunds, and debits.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "txType": { "type": "string", "enum": ["STARTER_GRANT", "USAGE_DEBIT", "ADMIN_GRANT", "ADMIN_ADJUSTMENT", "SUBSCRIPTION_GRANT", "CREDIT_PURCHASE", "GENERATION_REFUND"] },
+        "amount": { "type": "integer" },
+        "balanceAfter": { "type": "integer" },
+        "toolId": { "type": "string" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "txType", "amount", "balanceAfter", "toolId", "description", "createdAt"]
+    },
+    "AiProviderConfig": {
+      "title": "AiProviderConfig",
+      "description": "Admin-only AI provider adapter metadata (secrets stay in backend env/Secret Manager only).",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "adapterType": { "type": "string", "enum": ["GEMINI", "OPENAI_COMPATIBLE", "IMAGE", "VIDEO", "SPEECH", "AUDIO_SFX", "SELF_HOSTED"] },
+        "baseUrl": { "type": "string" },
+        "secretEnvRef": { "type": "string" },
+        "hasServerCredential": { "type": "boolean" },
+        "enabled": { "type": "boolean" },
+        "priority": { "type": "integer" },
+        "fallbackProviderId": { "type": "string" },
+        "healthStatus": { "type": "string", "enum": ["HEALTHY", "DEGRADED", "UNCONFIGURED", "DISABLED"] },
+        "totalRequests": { "type": "integer" },
+        "totalErrors": { "type": "integer" },
+        "lastError": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "adapterType", "enabled", "priority", "healthStatus", "totalRequests", "totalErrors", "updatedAt"]
+    },
+    "AiModelRouting": {
+      "title": "AiModelRouting",
+      "description": "Model routing, fallback chain, external ownership label, and per-model credit cost.",
+      "type": "object",
+      "properties": {
+        "modelId": { "type": "string" },
+        "displayName": { "type": "string" },
+        "providerId": { "type": "string" },
+        "fallbackProviderId": { "type": "string" },
+        "suppliedBy": { "type": "string" },
+        "capability": { "type": "string", "enum": ["CHAT", "IMAGE", "VIDEO", "SPEECH", "SFX"] },
+        "creditCost": { "type": "integer" },
+        "rateLimitRpm": { "type": "integer" },
+        "enabled": { "type": "boolean" },
+        "isDefault": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["modelId", "displayName", "providerId", "suppliedBy", "capability", "creditCost", "rateLimitRpm", "enabled", "isDefault", "updatedAt"]
+    },
+    "AiUsageRecord": {
+      "title": "AiUsageRecord",
+      "description": "Aggregated AI usage telemetry.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "modelId": { "type": "string" },
+        "providerId": { "type": "string" },
+        "capability": { "type": "string" },
+        "creditsUsed": { "type": "integer" },
+        "tokensUsed": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "modelId", "providerId", "capability", "creditsUsed", "createdAt"]
+    },
+    "GenerationJob": {
+      "title": "GenerationJob",
+      "description": "Asynchronous media/video generation job status.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "jobType": { "type": "string", "enum": ["VIDEO", "IMAGE", "SPEECH", "SFX"] },
+        "modelId": { "type": "string" },
+        "providerId": { "type": "string" },
+        "status": { "type": "string", "enum": ["QUEUED", "PROCESSING", "COMPLETED", "FAILED"] },
+        "prompt": { "type": "string" },
+        "resultUrl": { "type": "string" },
+        "errorMessage": { "type": "string" },
+        "creditsReserved": { "type": "integer" },
+        "creditsRefunded": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "jobType", "modelId", "status", "creditsReserved", "creditsRefunded", "createdAt", "updatedAt"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "AI chat conversation thread belonging to a user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "modelId": { "type": "string" },
+        "lastMessagePreview": { "type": "string" },
+        "messageCount": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "modelId", "lastMessagePreview", "messageCount", "createdAt", "updatedAt"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Individual message inside an AI chat conversation.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "senderRole": { "type": "string", "enum": ["user", "model"] },
+        "content": { "type": "string" },
+        "modelId": { "type": "string" },
+        "attachmentLabel": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "senderRole", "content", "modelId", "createdAt"]
+    },
+    "AiProject": {
+      "title": "AiProject",
+      "description": "Saved AI creation or studio output.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["CHAT", "IMAGE", "AUDIO", "WRITING", "CODE", "DOCUMENT", "PHOTO_EDIT", "VIDEO_PREP"] },
+        "prompt": { "type": "string" },
+        "outputText": { "type": "string" },
+        "modelId": { "type": "string" },
+        "creditsCost": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "category", "prompt", "outputText", "modelId", "creditsCost", "createdAt", "updatedAt"]
+    },
+    "SystemAnnouncement": {
+      "title": "SystemAnnouncement",
+      "description": "Admin-published platform announcement.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "severity": { "type": "string", "enum": ["INFO", "WARNING", "CRITICAL"] },
+        "active": { "type": "boolean" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "message", "severity", "active", "createdBy", "createdAt"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized administrator record.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "addedBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "addedBy", "createdAt"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable security and admin action audit log.",
+      "type": "object",
+      "properties": {
+        "actorUid": { "type": "string" },
+        "actorEmail": { "type": "string" },
+        "action": { "type": "string" },
+        "targetPath": { "type": "string" },
+        "details": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["actorUid", "actorEmail", "action", "targetPath", "details", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile, subscription state, and credit balance."
+    },
+    "/users/{userId}/conversations/{conversationId}": {
+      "schema": { "$ref": "#/entities/Conversation" },
+      "description": "User AI chat conversations."
+    },
+    "/users/{userId}/conversations/{conversationId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Messages within a conversation."
+    },
+    "/users/{userId}/credit_transactions/{transactionId}": {
+      "schema": { "$ref": "#/entities/CreditTransaction" },
+      "description": "User credit ledger transactions."
+    },
+    "/users/{userId}/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/AiProject" },
+      "description": "User saved AI creations and studio outputs."
+    },
+    "/developers/{developerId}": {
+      "schema": { "$ref": "#/entities/DeveloperAccount" },
+      "description": "Developer API portal registrations and quotas."
+    },
+    "/subscriptions/{subscriptionId}": {
+      "schema": { "$ref": "#/entities/SubscriptionRecord" },
+      "description": "Razorpay subscription lifecycle records."
+    },
+    "/subscription_plans/{planId}": {
+      "schema": { "$ref": "#/entities/SubscriptionPlan" },
+      "description": "Consumer and Developer SaaS subscription tiers."
+    },
+    "/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/PaymentRecord" },
+      "description": "Razorpay payment and invoice records."
+    },
+    "/payment_events/{eventId}": {
+      "schema": { "$ref": "#/entities/PaymentEvent" },
+      "description": "Idempotent Razorpay webhook event log (backend/admin only)."
+    },
+    "/api_keys/{keyId}": {
+      "schema": { "$ref": "#/entities/ApiKeyRecord" },
+      "description": "Hashed CEREVIX API keys."
+    },
+    "/api_requests/{requestId}": {
+      "schema": { "$ref": "#/entities/ApiRequestLog" },
+      "description": "Developer API request telemetry."
+    },
+    "/credit_wallets/{userId}": {
+      "schema": { "$ref": "#/entities/CreditWallet" },
+      "description": "Authoritative credit wallet per user."
+    },
+    "/credit_transactions/{transactionId}": {
+      "schema": { "$ref": "#/entities/CreditTransaction" },
+      "description": "Global credit ledger managed by backend & admins."
+    },
+    "/ai_providers/{providerId}": {
+      "schema": { "$ref": "#/entities/AiProviderConfig" },
+      "description": "Admin-only AI provider configuration & health."
+    },
+    "/ai_models/{modelId}": {
+      "schema": { "$ref": "#/entities/AiModelRouting" },
+      "description": "Model routing, external attribution, and credit cost catalog."
+    },
+    "/ai_usage/{usageId}": {
+      "schema": { "$ref": "#/entities/AiUsageRecord" },
+      "description": "AI usage telemetry records."
+    },
+    "/generation_jobs/{jobId}": {
+      "schema": { "$ref": "#/entities/GenerationJob" },
+      "description": "Asynchronous media generation job queue."
+    },
+    "/system_announcements/{announcementId}": {
+      "schema": { "$ref": "#/entities/SystemAnnouncement" },
+      "description": "System announcements and status alerts."
+    },
+    "/admin_users/{adminUid}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Admin role directory."
+    },
+    "/audit_logs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Immutable audit log entries."
+    }
+  }
+}
